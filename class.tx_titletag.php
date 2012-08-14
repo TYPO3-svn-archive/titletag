@@ -100,8 +100,9 @@ class tx_titletag
 
             $append = trim($append);
             if(strlen($append)) {
-                if($conf['pageTitleSeparator'] && version_compare(TYPO3_version, '4.7.0', '<')) {
-                    $separator = $conf['pageTitleSeparator'];
+                $pageTitleSeparator = $this->cObj->stdWrap($this->conf['pageTitleSeparator'], $this->conf['pageTitleSeparator.']);
+                if($pageTitleSeparator && version_compare(TYPO3_version, '4.7.0', '<')) {
+                    $separator = $pageTitleSeparator;
                 } elseif(version_compare(TYPO3_version, '4.7.0', '>=')
                   && isset($GLOBALS['TSFE']->config['config']['pageTitleSeparator'])
                   && $GLOBALS['TSFE']->config['config']['pageTitleSeparator']) {
@@ -110,7 +111,7 @@ class tx_titletag
                     $separator = ':';
                 }
 
-                $title .= $separator . ' ' . $append;
+                $title .= $separator . $append;
             }
         }
 
