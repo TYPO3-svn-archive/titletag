@@ -31,7 +31,7 @@
  */
 
 if (!defined ('TYPO3_MODE')) {
- 	die ('Access denied.');
+     die ('Access denied.');
 }
 
 /**
@@ -44,6 +44,16 @@ if (!defined ('TYPO3_MODE')) {
 class tx_titletag
 {
     /**
+     * @var array
+     */
+    public $conf = array();
+
+    /**
+     * @var tslib_cObj
+     */
+    public $cObj;
+
+    /**
      * Main plugin method
      *
      * @param string $content
@@ -52,63 +62,63 @@ class tx_titletag
      */
     public function main($content, $conf)
     {
-	    $title = '';
-	    $noPageTitle = $GLOBALS['TSFE']->config['config']['noPageTitle'];
-	    if($noPageTitle == 2 && isset($conf['noPageTitle']) && in_array($conf['noPageTitle'], array(0,1))) {
-	        $noPageTitle = $conf['noPageTitle'];
-	    }
+        $this->conf = $conf;
 
-        // let t3lib_TStemplate::printTitle() gernerate the title as usual
-        /** @see TSPagegen::renderContentWithHeader(), t3lib_TStemplate::printTitle() */
-        $title = $GLOBALS['TSFE']->tmpl->printTitle(
-            $GLOBALS['TSFE']->altPageTitle
-                ? $GLOBALS['TSFE']->altPageTitle
-                : $GLOBALS['TSFE']->page['title'],
-            $noPageTitle,
-            $GLOBALS['TSFE']->config['config']['pageTitleFirst']);
-	    if ($GLOBALS['TSFE']->config['config']['titleTagFunction']) {
-	        $title = $GLOBALS['TSFE']->cObj->callUserFunction($GLOBALS['TSFE']->config['config']['titleTagFunction'], array(), $title);
-        }
-
-        //$siteTitle = $GLOBALS['TSFE']->tmpl->setup['sitetitle'];
-        //$pageTitle = $GLOBALS['TSFE']->altPageTitle ? $GLOBALS['TSFE']->altPageTitle : $GLOBALS['TSFE']->page['title'];
-
-        // look for $_GET params that need 'title-expansion'
-        $mmForumParams = t3lib_div::_GET('tx_mmforum_pi1');
-        $ttNewsParams = t3lib_div::_GET('tx_ttnews');
-        $append = '';
-
-        // mm_forum
-        if(array_key_exists('tid', $mmForumParams) && $mmForumParams['tid']) {
-            $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('topic_title', 'tx_mmforum_topics', 'uid=' . $mmForumParams['tid']);
-            $append = $row['topic_title'];
-        } elseif(array_key_exists('fid', $mmForumParams) && $mmForumParams['fid']) {
-            $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('forum_name', 'tx_mmforum_forums', 'uid=' . $mmForumParams['fid']);
-            $append = $row['forum_name'];
-        }
-
-        $append = trim($append);
-
-        if(strlen($append)) {
-            if(version_compare(TYPO3_version, '4.7.0', '>=')
-              && isset($GLOBALS['TSFE']->config['config']['pageTitleSeparator'])
-              && $GLOBALS['TSFE']->config['config']['pageTitleSeparator']) {
-                $separator = $GLOBALS['TSFE']->config['config']['pageTitleSeparator'];
-            } else {
-                $separator = ':';
+        // allow force-override the whole pagetitle
+        $title = trim($this->cObj->cObjGetSingle($conf['forceTitle'], $conf['forceTitle.']));
+        if(!$title) {
+            $pageTitle = $this->cObj->cObjGetSingle($conf['overridePagetitle'], $conf['overridePagetitle.']);
+            if(!$pageTitle) {
+                $pageTitle = $GLOBALS['TSFE']->altPageTitle
+                    ? $GLOBALS['TSFE']->altPageTitle
+                    : $GLOBALS['TSFE']->page['title'];
             }
 
-            $title .= $separator . ' ' . $append;
+            $noPageTitle = $GLOBALS['TSFE']->config['config']['noPageTitle'];
+            if($noPageTitle == 2 && isset($conf['noPageTitle']) && in_array($conf['noPageTitle'], array(0,1))) {
+                $noPageTitle = $conf['noPageTitle'];
+            }
+
+            $title = $this->_createBaseTitle($pageTitle, $noPageTitle);
+
+            // look for $_GET params that need 'title-expansion'
+            $mmForumParams = t3lib_div::_GET('tx_mmforum_pi1');
+            $ttNewsParams = t3lib_div::_GET('tx_ttnews');
+            $append = '';
+
+            // mm_forum
+            if(array_key_exists('tid', $mmForumParams) && $mmForumParams['tid']) {
+                $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('topic_title', 'tx_mmforum_topics', 'uid=' . $mmForumParams['tid']);
+                $append = $row['topic_title'];
+            } elseif(array_key_exists('fid', $mmForumParams) && $mmForumParams['fid']) {
+                $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('forum_name', 'tx_mmforum_forums', 'uid=' . $mmForumParams['fid']);
+                $append = $row['forum_name'];
+            } elseif(array_key_exists('tag_uid', $ttNewsParams) && $ttNewsParams['tag_uid']) {
+                $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('title', 'tx_simpletag_tag', 'uid=' . $ttNewsParams['tag_uid']);
+                $append = $row['title'];
+            }
+
+            $append = trim($append);
+            if(strlen($append)) {
+                if($conf['pageTitleSeparator'] && version_compare(TYPO3_version, '4.7.0', '<')) {
+                    $separator = $conf['pageTitleSeparator'];
+                } elseif(version_compare(TYPO3_version, '4.7.0', '>=')
+                  && isset($GLOBALS['TSFE']->config['config']['pageTitleSeparator'])
+                  && $GLOBALS['TSFE']->config['config']['pageTitleSeparator']) {
+                    $separator = $GLOBALS['TSFE']->config['config']['pageTitleSeparator'];
+                } else {
+                    $separator = ':';
+                }
+
+                $title .= $separator . ' ' . $append;
+            }
         }
+
+        $title = $this->cObj->wrap($title, $conf['wrap']);
 
         if($conf['debug']) {
             $title .= ' [' . date('d.m.Y H:i:s') . ']';
         }
-
-//        $workMode = -1;  // write $GLOBALS['tx_pagetitle_title']
-//        $workMode =  0;  // return title tag
-//        $workMode =  1;  // write the page title to TSFE
-//        $workmode =  2;  // combine 1 and 2
 
         if($GLOBALS['TSFE']->config['config']['noPageTitle'] != 2) {
             if(strlen(trim($GLOBALS['TSFE']->content)) > 0) {
@@ -125,6 +135,50 @@ class tx_titletag
         }
 
         return '<title>' . $title . '</title>';
+    }
+
+    /**
+     * Creates the base title value
+     *
+     * @see TSPagegen::renderContentWithHeader()
+     * @see t3lib_TStemplate::printTitle()
+     * @param string $pageTitle
+     * @param int $noPageTitle
+     * @return string
+     */
+    protected function _createBaseTitle($pageTitle, $noPageTitle)
+    {
+        $separator = $this->cObj->stdWrap($this->conf['pageTitleSeparator'], $this->conf['pageTitleSeparator.']);
+        if($separator && version_compare(TYPO3_version, '4.7.0', '<')) {
+            // "back-port" the function from TYPO3 4.7
+            $siteTitle = trim($GLOBALS['TSFE']->tmpl->setup['sitetitle']);
+            $pageTitle = $noPageTitle ? '' : $pageTitle;
+
+            if($GLOBALS['TSFE']->config['config']['pageTitleFirst']) {
+                $temp = $siteTitle;
+                $siteTitle = $pageTitle;
+                $pageTitle = $temp;
+            }
+
+            if ($pageTitle != '' && $siteTitle != '') {
+                $title = $siteTitle . $separator . $pageTitle;
+            } else {
+                $title = $siteTitle . $pageTitle;
+            }
+
+        } else {
+            // let t3lib_TStemplate::printTitle() gernerate the title 'as usual'
+            $title = $GLOBALS['TSFE']->tmpl->printTitle(
+                $pageTitle,
+                $noPageTitle,
+                $GLOBALS['TSFE']->config['config']['pageTitleFirst']);
+        }
+
+        if ($GLOBALS['TSFE']->config['config']['titleTagFunction']) {
+            $title = $GLOBALS['TSFE']->cObj->callUserFunction($GLOBALS['TSFE']->config['config']['titleTagFunction'], array(), $title);
+        }
+
+        return $title;
     }
 }
 

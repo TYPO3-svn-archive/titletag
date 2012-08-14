@@ -1,5 +1,11 @@
 plugin.tx_titletag {
     debug = 0
-    noPageTitle = 0
     noReturn = 0
+    overridePagetitle =
+    forceTitle =
+    wrap =
+    # only for TYPO3 < 4.7, because as of that version, TYPO3 implements the option config.pageTitleSeparator
+    pageTitleSeparator =
+    # this will replace the option config.noPageTitle when config.noPageTitle is set to '2'
+    noPageTitle = 0
 }
