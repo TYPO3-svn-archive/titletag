@@ -1,0 +1,5 @@
+plugin.tx_titletag {
+    debug = 0
+    noPageTitle = 0
+    noReturn = 0
+}
