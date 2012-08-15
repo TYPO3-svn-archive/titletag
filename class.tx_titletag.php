@@ -65,9 +65,9 @@ class tx_titletag
         $this->conf = $conf;
 
         // allow force-override the whole pagetitle
-        $title = trim($this->cObj->cObjGetSingle($conf['forceTitle'], $conf['forceTitle.']));
+        $title = trim($this->cObj->cObjGetSingle($this->conf['forceTitle'], $this->conf['forceTitle.']));
         if(!$title) {
-            $pageTitle = $this->cObj->cObjGetSingle($conf['overridePagetitle'], $conf['overridePagetitle.']);
+            $pageTitle = $this->cObj->cObjGetSingle($this->conf['overridePagetitle'], $this->conf['overridePagetitle.']);
             if(!$pageTitle) {
                 $pageTitle = $GLOBALS['TSFE']->altPageTitle
                     ? $GLOBALS['TSFE']->altPageTitle
@@ -75,8 +75,8 @@ class tx_titletag
             }
 
             $noPageTitle = $GLOBALS['TSFE']->config['config']['noPageTitle'];
-            if($noPageTitle == 2 && isset($conf['noPageTitle']) && in_array($conf['noPageTitle'], array(0,1))) {
-                $noPageTitle = $conf['noPageTitle'];
+            if($noPageTitle == 2 && isset($this->conf['noPageTitle']) && in_array($this->conf['noPageTitle'], array(0,1))) {
+                $noPageTitle = $this->conf['noPageTitle'];
             }
 
             $title = $this->_createBaseTitle($pageTitle, $noPageTitle);
@@ -115,14 +115,25 @@ class tx_titletag
             }
         }
 
-        $title = $this->cObj->wrap($title, $conf['wrap']);
+        $title = $this->cObj->wrap($title, $this->conf['wrap']);
 
-        if($conf['debug']) {
+        // call post processing hook
+        if(is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['tx_titletag']['titleGenerationPostProc'])) {
+            foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['tx_titletag']['titleGenerationPostProc'] as $classRef) {
+                $hookObject = t3lib_div::getUserObj($classRef);
+                if(method_exists($hookObject, 'titleGenerationPostProc')) {
+                    $hookObject->titleGenerationPostProc(&$title, &$this);
+                }
+            }
+        }
+
+        if($this->conf['debug']) {
             $title .= ' [' . date('d.m.Y H:i:s') . ']';
         }
 
         if($GLOBALS['TSFE']->config['config']['noPageTitle'] != 2) {
             if(strlen(trim($GLOBALS['TSFE']->content)) > 0) {
+                // content is rendered already
                 $content = $GLOBALS['TSFE']->content;
                 $content = preg_replace('/<title>(.*?)<\/title>/', '<title>' . $title . '</title>', $content, 1);
                 $GLOBALS['TSFE']->content = $content;
@@ -131,7 +142,7 @@ class tx_titletag
             }
         }
 
-        if(isset($conf['noReturn']) && $conf['noReturn']) {
+        if(isset($this->conf['noReturn']) && $this->conf['noReturn']) {
             return;
         }
 
