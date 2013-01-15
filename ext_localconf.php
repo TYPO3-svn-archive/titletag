@@ -38,4 +38,10 @@ if (!defined ('TYPO3_MODE')) {
 t3lib_extMgm::addPItoST43($_EXTKEY, 'class.tx_titletag.php', '', '', 0);
 
 
+// Register hooks
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->renderTitle';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->substituteIntInc';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-output']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->modifyTitle';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['pageLoadedFromCache']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->pageLoadedFromCache';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-cached']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->tsfeSaveCache';
 ?>

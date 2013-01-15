@@ -34,6 +34,9 @@ if (!defined ('TYPO3_MODE')) {
      die ('Access denied.');
 }
 
+/** @see t3lib_Singleton */
+require_once PATH_t3lib . 'interfaces/interface.t3lib_singleton.php';
+
 /**
  * Main plugin
  *
@@ -41,112 +44,238 @@ if (!defined ('TYPO3_MODE')) {
  * @package    TYPO3
  * @subpackage titletag
  */
-class tx_titletag
+class tx_titletag implements t3lib_Singleton
 {
     /**
      * @var array
      */
-    public $conf = array();
+    protected $_conf = array();
 
     /**
-     * @var tslib_cObj
-     */
-    public $cObj;
-
-    /**
-     * Main plugin method
      *
-     * @param string $content
-     * @param array $conf
-     * @return string
+     * @var boolean
      */
-    public function main($content, $conf)
+    protected $_enable = false;
+
+    /**
+     *
+     * @var array
+     */
+    protected $_substituteIntInc = array();
+
+    /**
+     * Initializer
+     *
+     * @return void
+     */
+    protected function _init()
     {
-        $this->conf = $conf;
+        // enable extension
+        $this->_enable = (TYPO3_MODE == 'FE' && (bool) $GLOBALS['TSFE']->config['config']['tx_titletag_enable']);
 
-        // allow force-override the whole pagetitle
-        $title = trim($this->cObj->cObjGetSingle($this->conf['forceTitle'], $this->conf['forceTitle.']));
-        if(!$title) {
-            $pageTitle = $this->cObj->cObjGetSingle($this->conf['overridePagetitle'], $this->conf['overridePagetitle.']);
-            if(!$pageTitle) {
-                $pageTitle = $GLOBALS['TSFE']->altPageTitle
-                    ? $GLOBALS['TSFE']->altPageTitle
-                    : $GLOBALS['TSFE']->page['title'];
-            }
-
-            $noPageTitle = $GLOBALS['TSFE']->config['config']['noPageTitle'];
-            if($noPageTitle == 2 && isset($this->conf['noPageTitle']) && in_array($this->conf['noPageTitle'], array(0,1))) {
-                $noPageTitle = $this->conf['noPageTitle'];
-            }
-
-            $title = $this->_createBaseTitle($pageTitle, $noPageTitle);
-
-            // look for $_GET params that need 'title-expansion'
-            $mmForumParams = t3lib_div::_GET('tx_mmforum_pi1');
-            $ttNewsParams = t3lib_div::_GET('tx_ttnews');
-            $append = '';
-
-            // mm_forum
-            if(array_key_exists('tid', $mmForumParams) && $mmForumParams['tid']) {
-                $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('topic_title', 'tx_mmforum_topics', 'uid=' . $mmForumParams['tid']);
-                $append = $row['topic_title'];
-            } elseif(array_key_exists('fid', $mmForumParams) && $mmForumParams['fid']) {
-                $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('forum_name', 'tx_mmforum_forums', 'uid=' . $mmForumParams['fid']);
-                $append = $row['forum_name'];
-            } elseif(array_key_exists('tag_uid', $ttNewsParams) && $ttNewsParams['tag_uid']) {
-                $row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('title', 'tx_simpletag_tag', 'uid=' . $ttNewsParams['tag_uid']);
-                $append = $row['title'];
-            }
-
-            $append = trim($append);
-            if(strlen($append)) {
-                $pageTitleSeparator = $this->cObj->stdWrap($this->conf['pageTitleSeparator'], $this->conf['pageTitleSeparator.']);
-                if($pageTitleSeparator && version_compare(TYPO3_version, '4.7.0', '<')) {
-                    $separator = $pageTitleSeparator;
-                } elseif(version_compare(TYPO3_version, '4.7.0', '>=')
-                  && isset($GLOBALS['TSFE']->config['config']['pageTitleSeparator'])
-                  && $GLOBALS['TSFE']->config['config']['pageTitleSeparator']) {
-                    $separator = $GLOBALS['TSFE']->config['config']['pageTitleSeparator'];
-                } else {
-                    $separator = ':';
-                }
-
-                $title .= $separator . $append;
-            }
+        if($this->_enable) {
+            // save configuration
+            $this->_conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_titletag.'];
         }
+    }
 
-        $title = $this->cObj->wrap($title, $this->conf['wrap']);
+    /**
+     * 'pObj' => &$this, 'cache_pages_row' => &$row
+     */
+    public function pageLoadedFromCache(&$params, $pObj)
+    {
+        $tsfeConfig = (array)unserialize($params['cache_pages_row']['cache_data']);
+        $this->_enable = (TYPO3_MODE == 'FE' && (bool) $tsfeConfig['config']['tx_titletag_enable']);
 
-        // call post processing hook
-        if(is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['tx_titletag']['titleGenerationPostProc'])) {
-            foreach($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['tx_titletag']['titleGenerationPostProc'] as $classRef) {
-                $hookObject = t3lib_div::getUserObj($classRef);
-                if(method_exists($hookObject, 'titleGenerationPostProc')) {
-                    $hookObject->titleGenerationPostProc(&$title, &$this);
-                }
-            }
-        }
-
-        if($this->conf['debug']) {
-            $title .= ' [' . date('d.m.Y H:i:s') . ']';
-        }
-
-        if($GLOBALS['TSFE']->config['config']['noPageTitle'] != 2) {
-            if(strlen(trim($GLOBALS['TSFE']->content)) > 0) {
-                // content is rendered already
-                $content = $GLOBALS['TSFE']->content;
-                $content = preg_replace('/<title>(.*?)<\/title>/', '<title>' . $title . '</title>', $content, 1);
-                $GLOBALS['TSFE']->content = $content;
-            } else {
-                $GLOBALS['TSFE']->page['title'] = $title;
-            }
-        }
-
-        if(isset($this->conf['noReturn']) && $this->conf['noReturn']) {
+        if(!$this->_enable) {
             return;
         }
 
-        return '<title>' . $title . '</title>';
+        $this->_conf = $tsfeConfig['tx_titletag_config'];
+
+        $this->_configToStack();
+        return;
+    }
+
+    public function tsfeSaveCache(&$params, $pObj)
+    {
+        $params['pObj']->config['tx_titletag_config'] = $this->_conf;
+    }
+
+    protected function _configToStack()
+    {
+        /** @see $matchObj t3lib_matchCondition_frontend */
+        $matchCondition = t3lib_div::makeInstance('t3lib_matchCondition_frontend');
+        $matchCondition instanceof t3lib_matchCondition_frontend;
+//         $matchCondition->setSimulateMatchConditions(array());
+//         $matchCondition->setSimulateMatchResult(false);
+
+        foreach($this->_conf['partConf.'] as $partName => $partConf) {
+            if(!array_key_exists('condition', $partConf)
+              || $matchCondition->match($partConf['condition'])) {
+                self::getStack()->push(rtrim($partName, '.'), $partConf);
+            }
+        }
+
+        return;
+    }
+
+
+    /**
+     *
+     * @see t3lib_PageRenderer::render()
+     * @param array $params
+     * @param t3lib_PageRenderer $pObj
+     * @return void
+     */
+    public function renderTitle(&$params, /*t3lib_PageRenderer*/ $pObj)
+    {
+        $this->_init();
+
+        if(!$this->_enable) {
+            return;
+        }
+
+        $title = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['forceTitle'], $this->_conf['forceTitle.']);
+        if(!$title) {
+            // create the first part from the default title
+            $parts = array($this->_getDefaultTitle());
+
+            // load typoscript config into the stack
+            $this->_configToStack();
+
+            // create parts from the stack
+            $parts += $this->_renderTitleParts();
+
+            // create the title
+            $title = $this->_concatenateTitleParts($parts);
+        }
+
+        $params['title'] = $title;
+
+        return;
+    }
+
+    /**
+     *
+     * @param array $parts
+     * @return string
+     */
+    protected function _concatenateTitleParts(array $parts)
+    {
+        // create separator
+        if(version_compare(TYPO3_version, '4.7.0', '>=')
+          && isset($GLOBALS['TSFE']->tmpl->setup['config.']['pageTitleSeparator'])
+          && $GLOBALS['TSFE']->tmpl->setup['config.']['pageTitleSeparator']) {
+            $separator = $GLOBALS['TSFE']->tmpl->setup['config.']['pageTitleSeparator'];
+        } else {
+            $separator = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['pageTitleSeparator'], $this->_conf['pageTitleSeparator.']);
+            if(!$separator) {
+                $separator = ':';
+            }
+        }
+
+        return implode($separator . ' ', $parts);
+    }
+
+    /**
+     * Renders the title parts
+     *
+     * @todo improve ignore config
+     * @return array
+     */
+    protected function _renderTitleParts()
+    {
+        $parts = array();
+        // arrange the stack in the right order
+        foreach(self::getStack() as $partName => $partConf) {
+            // remove the part from the stack
+            self::getStack()->offsetUnset($partName);
+
+            // ignore condition
+            if(array_key_exists('ignoreOnMatch', $partConf)) {
+                if(array_key_exists($partConf['ignoreOnMatch'], $parts)
+                  || self::getStack()->offsetExists($partConf['ignoreOnMatch'])) {
+                    continue;
+                }
+            }
+            switch($partConf['triggers']) {
+                case 'userFunc' :
+                    $params = array('pObj' => &$this);
+                    $parts[$partName] = t3lib_div::callUserFunction($partConf['userFunc'], $params, $this);
+                    break;
+                case 'content' :
+                    $parts[$partName] = $GLOBALS['TSFE']->cObj->cObjGetSingle($partConf['content'], $partConf['content.']);
+                    break;
+                case 'text' :
+                    $parts[$partName] = $partConf['content'];
+                    break;
+                default :
+                    throw new InvalidArgumentException('Illegal trigger "' . $partConf['triggers'] . '" in plugin.tx_titletag.partConf.' . $partName . '.triggers');
+                    break;
+            }
+
+            // remember any intInc scripts
+            if(strpos($parts[$partName], '<!--INT_SCRIPT.') !== false) {
+                $this->_substituteIntInc[] = $parts[$partName];
+            }
+        }
+
+        return $parts;
+    }
+
+    /**
+     *
+     * @see tslib_fe::processOutput()
+     * @param array $params
+     * @param object $pObj
+     */
+    public function modifyTitle(&$params, &$pObj)
+    {
+        if(!$this->_enable) {
+            return;
+        }
+
+        if(!count(self::getStack())) {
+            return;
+        }
+
+        $noTitleFound = (preg_match('/<title>(.*?)<\/title>/i', $pObj->content, $matches) != 1);
+
+        // create the first part from the current title
+        $parts = array($matches[1]);
+
+        // add the parts from the stack
+        $addParts = $this->_renderTitleParts();
+        array_walk($addParts, 'htmlspecialchars');
+        $parts += $addParts;
+
+        // create the title
+        $title = $this->_concatenateTitleParts($parts);
+
+        // replace the title in the HTML document
+        $pObj->content = preg_replace('/<title>(.*?)<\/title>/', '<title>' . $title . ' ' .date('d.m.Y H:i:s', time()) . '</title>', $pObj->content, 1);
+
+        return;
+    }
+
+    /**
+     * Restores the htmlspecialchared _INT includes
+     *
+     * @param array $params
+     * @param object $pObj
+     * @return void
+     */
+    public function substituteIntInc(&$params, &$pObj)
+    {
+        if(!$this->_enable) {
+            return;
+        }
+
+        foreach($this->_substituteIntInc as $substitute) {
+            $pObj->content = str_replace(htmlspecialchars($substitute), $substitute, $pObj->content);
+        }
+        return;
     }
 
     /**
@@ -154,17 +283,24 @@ class tx_titletag
      *
      * @see TSPagegen::renderContentWithHeader()
      * @see t3lib_TStemplate::printTitle()
-     * @param string $pageTitle
-     * @param int $noPageTitle
      * @return string
      */
-    protected function _createBaseTitle($pageTitle, $noPageTitle)
+    protected function _getDefaultTitle()
     {
-        $separator = $this->cObj->stdWrap($this->conf['pageTitleSeparator'], $this->conf['pageTitleSeparator.']);
+        // overriding pagetitle
+        $pageTitle = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['overridePagetitle'], $this->_conf['overridePagetitle.']);
+        if(!$pageTitle) {
+            $pageTitle = $GLOBALS['TSFE']->altPageTitle
+                ? $GLOBALS['TSFE']->altPageTitle
+                : $GLOBALS['TSFE']->page['title'];
+        }
+
+        $separator = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['pageTitleSeparator'], $this->_conf['pageTitleSeparator.']);
+
         if($separator && version_compare(TYPO3_version, '4.7.0', '<')) {
             // "back-port" the function from TYPO3 4.7
             $siteTitle = trim($GLOBALS['TSFE']->tmpl->setup['sitetitle']);
-            $pageTitle = $noPageTitle ? '' : $pageTitle;
+            $pageTitle = $GLOBALS['TSFE']->config['config']['noPageTitle'] ? '' : $pageTitle;
 
             if($GLOBALS['TSFE']->config['config']['pageTitleFirst']) {
                 $temp = $siteTitle;
@@ -173,7 +309,7 @@ class tx_titletag
             }
 
             if ($pageTitle != '' && $siteTitle != '') {
-                $title = $siteTitle . $separator . $pageTitle;
+                $title = $siteTitle . $separator . ' ' . $pageTitle;
             } else {
                 $title = $siteTitle . $pageTitle;
             }
@@ -182,7 +318,7 @@ class tx_titletag
             // let t3lib_TStemplate::printTitle() gernerate the title 'as usual'
             $title = $GLOBALS['TSFE']->tmpl->printTitle(
                 $pageTitle,
-                $noPageTitle,
+                $GLOBALS['TSFE']->config['config']['noPageTitle'],
                 $GLOBALS['TSFE']->config['config']['pageTitleFirst']);
         }
 
@@ -191,6 +327,26 @@ class tx_titletag
         }
 
         return $title;
+    }
+
+    /**
+     * Titletag API: returns the stack
+     *
+     * @return tx_titletag_stack
+     */
+    public static function getStack()
+    {
+        require_once t3lib_extMgm::extPath('titletag') . 'class.tx_titletag_stack.php';
+        return tx_titletag_stack::getInstance();
+    }
+}
+
+class tx_titletag_test
+{
+    public function main($content, $conf)
+    {
+        return __METHOD__ . ' | ' . date('d.m.Y H:i:s', time());
+        //print '<h3>' . __METHOD__ . ' | ' . date('d.m.Y H:i:s', time()) . '</h3><pre>' . tx_zendmvc_backtrace(true) . '</pre>';
     }
 }
 
