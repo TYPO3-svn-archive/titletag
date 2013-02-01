@@ -1,0 +1,2 @@
+#cat=advanced/enable; type=boolean; label=Enable titletag extension:En- and disable the functions of the extension 'titletag'
+plugin.tx_titletag_enable = 0

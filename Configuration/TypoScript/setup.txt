@@ -1,0 +1,7 @@
+config.tx_titletag_enable = {$plugin.tx_titletag_enable}
+
+plugin.tx_titletag {
+    overridePagetitle =
+    forceTitle =
+    pageTitleSeparator =
+}
