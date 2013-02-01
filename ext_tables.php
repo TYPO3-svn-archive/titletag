@@ -2,7 +2,7 @@
 /**
  * Copyright notice
  *
- * (c) 2012 Agentur am Wasser | Maeder & Partner AG
+ * (c) 2013 Agentur am Wasser | Maeder & Partner AG
  * All rights reserved
  *
  * This script is part of the TYPO3 project. The TYPO3 project is
@@ -23,7 +23,7 @@
  * **************************************************************
  *
  * @author     Agentur am Wasser | Maeder & Partner AG <development@agenturamwasser.ch>
- * @copyright  Copyright (c) 2012 Agentur am Wasser | Maeder & Partner AG {@link http://www.agenturamwasser.ch}
+ * @copyright  Copyright (c) 2013 Agentur am Wasser | Maeder & Partner AG {@link http://www.agenturamwasser.ch}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @category   TYPO3
  * @package    titletag
@@ -34,7 +34,12 @@ if (!defined ('TYPO3_MODE')) {
  	die ('Access denied.');
 }
 
-// add static template
-t3lib_extMgm::addStaticFile($_EXTKEY, 'static/', 'Titletag');
+if(version_compare(TYPO3_version, '6.0.0', '<')) {
+    // add static template
+    t3lib_extMgm::addStaticFile($_EXTKEY, 'Configuration/TypoScript', 'Titletag');
+} else {
+    // add static template
+    \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addStaticFile($_EXTKEY, 'Configuration/TypoScript', 'Titletag');
+}
 
 ?>
