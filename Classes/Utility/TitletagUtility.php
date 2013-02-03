@@ -152,29 +152,19 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
         return $title;
     }
 
-
+    /**
+     * Returns the pageTitleSeparator
+     *
+     * @return string
+     */
     protected function _getPageTitleSeparator()
     {
         if($this->_separator === null) {
             $separator = $GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleSeparator'], $GLOBALS['TSFE']->config['config']['pageTitleSeparator.']);
             if(!$separator) {
+                // Falling back to TYPO3 default
                 $separator = ': ';
             }
-
-            /*
-            $separator = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['pageTitleSeparator'], $this->_conf['pageTitleSeparator.']);
-            if(!$separator) {
-                // fallback for TYPO3 >= 4.7.x
-                if(version_compare(TYPO3_version, '4.7.0', '>=')
-                  && isset($GLOBALS['TSFE']->config['config']['pageTitleSeparator'])
-                  && $GLOBALS['TSFE']->config['config']['pageTitleSeparator']) {
-                    $separator = $GLOBALS['TSFE']->config['config']['pageTitleSeparator'] . ' ';
-                } else {
-                    // fallback for everything else
-                    $separator = ': ';
-                }
-            }*/
-
             // remember separator
             $this->_separator = $separator;
         }
@@ -182,7 +172,7 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * Concatenate the title parts array
+     * Concatenates the title parts array
      *
      * @param array $parts
      * @return string
