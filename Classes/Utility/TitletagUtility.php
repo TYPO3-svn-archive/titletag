@@ -74,19 +74,15 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
     /**
      * Renders the page title
      *
-     * No return, the title is stored in referenced $params array
-     *
-     * @param array $params
-     * @param t3lib_PageRenderer|\TYPO3\CMS\Core\Page\PageRenderer $pObj
-     * @see \TYPO3\CMS\Frontend\Page\PageGenerator::renderContentWithHeader()
-     * @return void
+     * @param string $titleTagContent
+     * @return string
      */
-    public function renderTitle(&$params, $pObj)
+    public function renderTitle($titleTagContent)
     {
         $this->_init();
 
         if(!$this->_enable) {
-            return;
+            return $titleTagContent;
         }
 
         $title = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['forceTitle'], $this->_conf['forceTitle.']);
@@ -101,9 +97,7 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
             $title = $this->_concatenateTitleParts($parts);
         }
 
-        $params['title'] = $title;
-
-        return;
+        return $title;
     }
 
     /**
@@ -144,10 +138,10 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
 
 		$title = $siteTitle . $separator . $pageTitle;
 
-		// call the hook
-        if ($GLOBALS['TSFE']->config['config']['titleTagFunction']) {
-            $title = $GLOBALS['TSFE']->cObj->callUserFunction($GLOBALS['TSFE']->config['config']['titleTagFunction'], array(), $title);
-        }
+//         // call the hook
+//         if ($GLOBALS['TSFE']->config['config']['titleTagFunction']) {
+//             $title = $GLOBALS['TSFE']->cObj->callUserFunction($GLOBALS['TSFE']->config['config']['titleTagFunction'], array(), $title);
+//         }
 
         return $title;
     }
