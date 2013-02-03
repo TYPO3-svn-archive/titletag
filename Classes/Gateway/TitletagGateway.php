@@ -60,8 +60,10 @@ class tx_titletag_TitletagGateway
     protected function _getUtilityInstance()
     {
         if(version_compare(TYPO3_version, '6.0.0', '<')) {
-            return \t3lib_div::makeInstance('EXT:titletag/Classes/Utility/TitletagUtilityV4.php:tx_titletag_TitletagUtilityV4');
+            require_once t3lib_extmgm::extPath('titletag') . 'Classes/Utility/TitletagUtilityV4.php';
+            return \t3lib_div::makeInstance('tx_titletag_TitletagUtilityV4');
         } else  {
+            require_once \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('titletag') . 'Classes/Utility/TitletagUtilityV4.php';
             return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Aaw\Titletag\Utility\TitletagUtility');
         }
     }
