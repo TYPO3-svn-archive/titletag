@@ -122,7 +122,6 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
         $separator = '';
 
         if(!$GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['noPageTitle'], $GLOBALS['TSFE']->config['config']['noPageTitle.'])) {
-//         if(!$GLOBALS['TSFE']->config['config']['noPageTitle']) {
             // overriding pagetitle
             $pageTitle = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['overridePagetitle'], $this->_conf['overridePagetitle.']);
             if(!$pageTitle) {
@@ -143,11 +142,6 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
 		}
 
 		$title = $siteTitle . $separator . $pageTitle;
-
-//         // call the hook
-//         if ($GLOBALS['TSFE']->config['config']['titleTagFunction']) {
-//             $title = $GLOBALS['TSFE']->cObj->callUserFunction($GLOBALS['TSFE']->config['config']['titleTagFunction'], array(), $title);
-//         }
 
         return $title;
     }

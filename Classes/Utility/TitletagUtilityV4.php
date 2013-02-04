@@ -124,7 +124,6 @@ class tx_titletag_TitletagUtilityV4 implements \t3lib_Singleton
         $separator = '';
 
         if(!$GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['noPageTitle'], $GLOBALS['TSFE']->config['config']['noPageTitle.'])) {
-//         if(!$GLOBALS['TSFE']->config['config']['noPageTitle']) {
             // overriding pagetitle
             $pageTitle = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['overridePagetitle'], $this->_conf['overridePagetitle.']);
             if(!$pageTitle) {
@@ -135,7 +134,6 @@ class tx_titletag_TitletagUtilityV4 implements \t3lib_Singleton
         }
 
         if($GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleFirst'], $GLOBALS['TSFE']->config['config']['pageTitleFirst.'])) {
-//         if($GLOBALS['TSFE']->config['config']['pageTitleFirst']) {
             $temp = $siteTitle;
             $siteTitle = $pageTitle;
             $pageTitle = $temp;
@@ -146,11 +144,6 @@ class tx_titletag_TitletagUtilityV4 implements \t3lib_Singleton
 		}
 
 		$title = $siteTitle . $separator . $pageTitle;
-
-//        // call the hook
-//        if ($GLOBALS['TSFE']->config['config']['titleTagFunction']) {
-//            $title = $GLOBALS['TSFE']->cObj->callUserFunction($GLOBALS['TSFE']->config['config']['titleTagFunction'], array(), $title);
-//        }
 
         return $title;
     }
