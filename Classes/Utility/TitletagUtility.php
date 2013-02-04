@@ -85,6 +85,10 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
             return $titleTagContent;
         }
 
+        // workarounding bug #28745 (see http://forge.typo3.org/issues/28745)
+        $recordRegister = $GLOBALS['TSFE']->recordRegister;
+        $GLOBALS['TSFE']->recordRegister = array();
+
         $title = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['forceTitle'], $this->_conf['forceTitle.']);
         if(!$title) {
             // create the first part from the default title
@@ -96,6 +100,9 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
             // create the title
             $title = $this->_concatenateTitleParts($parts);
         }
+
+        // restore recordRegister
+        $GLOBALS['TSFE']->recordRegister = $recordRegister;
 
         return $title;
     }
@@ -126,7 +133,6 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
         }
 
         if($GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleFirst'], $GLOBALS['TSFE']->config['config']['pageTitleFirst.'])) {
-//         if($GLOBALS['TSFE']->config['config']['pageTitleFirst']) {
             $temp = $siteTitle;
             $siteTitle = $pageTitle;
             $pageTitle = $temp;

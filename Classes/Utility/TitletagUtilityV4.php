@@ -87,6 +87,10 @@ class tx_titletag_TitletagUtilityV4 implements \t3lib_Singleton
             return $titleTagContent;
         }
 
+        // workarounding bug #28745 (see http://forge.typo3.org/issues/28745)
+        $recordRegister = $GLOBALS['TSFE']->recordRegister;
+        $GLOBALS['TSFE']->recordRegister = array();
+
         $title = $GLOBALS['TSFE']->cObj->stdWrap($this->_conf['forceTitle'], $this->_conf['forceTitle.']);
         if(!$title) {
             // create the first part from the default title
@@ -98,6 +102,9 @@ class tx_titletag_TitletagUtilityV4 implements \t3lib_Singleton
             // create the title
             $title = $this->_concatenateTitleParts($parts);
         }
+
+        // restore recordRegister
+        $GLOBALS['TSFE']->recordRegister = $recordRegister;
 
         return $title;
     }
