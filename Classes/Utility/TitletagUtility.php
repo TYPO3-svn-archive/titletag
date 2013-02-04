@@ -125,7 +125,7 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
             }
         }
 
-        if($GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleFirst'], $GLOBALS['TSFE']->config['config']['pageTitleFirst'])) {
+        if($GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleFirst'], $GLOBALS['TSFE']->config['config']['pageTitleFirst.'])) {
 //         if($GLOBALS['TSFE']->config['config']['pageTitleFirst']) {
             $temp = $siteTitle;
             $siteTitle = $pageTitle;

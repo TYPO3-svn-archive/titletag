@@ -127,7 +127,7 @@ class tx_titletag_TitletagUtilityV4 implements \t3lib_Singleton
             }
         }
 
-        if($GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleFirst'], $GLOBALS['TSFE']->config['config']['pageTitleFirst'])) {
+        if($GLOBALS['TSFE']->cObj->stdWrap($GLOBALS['TSFE']->config['config']['pageTitleFirst'], $GLOBALS['TSFE']->config['config']['pageTitleFirst.'])) {
 //         if($GLOBALS['TSFE']->config['config']['pageTitleFirst']) {
             $temp = $siteTitle;
             $siteTitle = $pageTitle;
