@@ -56,6 +56,11 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
     protected $_separator = null;
 
     /**
+     * @var array
+     */
+    protected $_substituteIntInc = array();
+
+    /**
      * Initializer
      *
      * @return void
@@ -99,6 +104,12 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
 
             // create the title
             $title = $this->_concatenateTitleParts($parts);
+        }
+
+        // remember any intInc scripts
+        if(\strpos($title, '<!--INT_SCRIPT.') !== false) {
+            \preg_match_all('/<!--INT_SCRIPT\.[a-fA-F0-9]{32}-->/', $title, $matches, PREG_PATTERN_ORDER);
+            $this->_substituteIntInc = $matches[0];
         }
 
         // restore recordRegister
@@ -175,6 +186,26 @@ class TitletagUtility implements \TYPO3\CMS\Core\SingletonInterface
     {
         $separator = $this->_getPageTitleSeparator();
         return implode($separator . ' ', $parts);
+    }
+
+    /**
+     * Restores the htmlspecialchared _INT includes
+     *
+     * @param array $params
+     * @param object $pObj
+     * @return void
+     */
+    public function substituteIntInc(&$params, &$pObj)
+    {
+        if(!$this->_enable || empty($this->_substituteIntInc)) {
+            return;
+        }
+
+        foreach($this->_substituteIntInc as $substitute) {
+            $pObj->content = \str_replace(\htmlspecialchars($substitute), $substitute, $pObj->content);
+        }
+
+        return;
     }
 
 }

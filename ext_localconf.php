@@ -36,6 +36,7 @@ if (!defined ('TYPO3_MODE')) {
 
 // Register hooks
 if(TYPO3_MODE == 'FE') {
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'EXT:titletag/Classes/Gateway/TitletagGateway.php:&tx_titletag_TitletagGateway->substituteIntInc';
 
 //     if(version_compare(TYPO3_version, '6.0.0', '<')) {
 //         $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-postProcess']['tx_titletag'] = 'EXT:titletag/Classes/Utility/TitletagUtilityV4.php:&tx_titletag_TitletagUtilityV4->renderTitle';
@@ -43,7 +44,6 @@ if(TYPO3_MODE == 'FE') {
 //         $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_pagerenderer.php']['render-preProcess']['tx_titletag'] = 'EXT:titletag/Classes/Utility/TitletagUtility.php:&Aaw\Titletag\Utility\TitletagUtility->renderTitle';
 //     }
 
-// $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->substituteIntInc';
 // $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-output']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->modifyTitle';
 // $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['pageLoadedFromCache']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->pageLoadedFromCache';
 // $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-cached']['tx_titletag'] = 'EXT:titletag/class.tx_titletag.php:&tx_titletag->tsfeSaveCache';

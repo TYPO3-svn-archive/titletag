@@ -52,6 +52,11 @@ class tx_titletag_TitletagGateway
         return $this->_getUtilityInstance()->renderTitle($titleTagContent);
     }
 
+    public function substituteIntInc(&$params, &$pObj)
+    {
+        return $this->_getUtilityInstance()->substituteIntInc($params, $pObj);
+    }
+
     /**
      * Returns the correct utility instance
      *
