@@ -1,12 +1,6 @@
 # En-/disable titletag extension
 config.tx_titletag_enable = {$plugin.tx_titletag.enable}
 
-# include the titletag gateway file
-includeLibs.titletag = EXT:titletag/Classes/Gateway/TitletagGateway.php
-
-# register the titletag userFunction
-config.titleTagFunction = tx_titletag_TitletagGateway->renderTitle
-
 # Additional configurations
 plugin.tx_titletag {
     overridePagetitle =
