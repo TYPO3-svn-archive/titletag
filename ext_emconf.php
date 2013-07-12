@@ -12,7 +12,7 @@
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'Title Tag Configuration',
-	'description' => 'Manages the configurable generation of the html tag "title"',
+	'description' => 'Manages the configurable generation of the html tag "title". Fully compatible with TYPO3 4.5 - 6.x',
 	'category' => 'fe',
 	'author' => 'Agentur am Wasser | Maeder & Partner AG',
 	'author_email' => 'development@agenturamwasser.ch',
