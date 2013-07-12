@@ -1,3 +1,10 @@
+2013-07-12 Christian Futterlieb <christian.futterlieb@agenturamwasser.ch>
+
+    * Re- structured extension:
+      - removing gateway class, invoking the utility classes direct
+      - collecting base functionality in an abstract titletag utility to extend from in the concrete classes (that only exist to specify the correct interface)
+      - moving the base typoscript to 'defaultTypoScript_setup'
+
 2013-02-25 Christian Futterlieb <christian.futterlieb@agenturamwasser.ch>
 
     * added possibility to use _INT cObjects in a page title configuration
