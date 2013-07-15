@@ -34,13 +34,13 @@ if (!defined ('TYPO3_MODE')) {
  	die ('Access denied.');
 }
 
-
 if(\version_compare(TYPO3_version, '6.0.0', '<')) {
-    t3lib_extMgm::addTypoScriptSetup('config.titleTagFunction = Tx_Titletag_Utility_TitletagUtilityV4->renderTitle');
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'Tx_Titletag_Utility_TitletagUtilityV4->substituteIntInc';
+    t3lib_extMgm::addTypoScriptSetup('includeLibs.tx_titletag = EXT:titletag/Classes/Utility/TitletagUtilityV4.php' . CRLF .
+                                     'config.titleTagFunction = Tx_Titletag_Utility_TitletagUtilityV4->renderTitle');
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'EXT:titletag/Classes/Utility/TitletagUtilityV4.php:Tx_Titletag_Utility_TitletagUtilityV4->substituteIntInc';
 } else  {
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup('config.titleTagFunction = Aaw\\Titletag\\Utility\\TitletagUtility->renderTitle');
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'EXT:titletag/Classes/Utility/TitletagUtility.php:Aaw\\Titletag\\Utility\\TitletagUtility->substituteIntInc';
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'Aaw\\Titletag\\Utility\\TitletagUtility->substituteIntInc';
 }
 
 ?>
