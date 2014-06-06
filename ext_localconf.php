@@ -47,7 +47,11 @@ if(\version_compare(TYPO3_version, '4.7.0', '<')) {
 } else  {
     // TYPO3 6.x
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup('config.titleTagFunction = Aaw\\Titletag\\Utility\\TitletagUtility->renderTitle');
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'Aaw\\Titletag\\Utility\\TitletagUtility->substituteIntInc';
+
+    // TYPO3 < 6.2
+    if (\version_compare(TYPO3_version, '6.2', '<')) {
+        $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-all']['tx_titletag'] = 'Aaw\\Titletag\\Utility\\TitletagUtility->substituteIntInc';
+    }
 }
 
 ?>

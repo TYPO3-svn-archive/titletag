@@ -106,10 +106,31 @@ abstract class TitletagUtilityAbstract
             $title = $this->_concatenateTitleParts($parts);
         }
 
+
         // remember any intInc scripts
         if(\strpos($title, '<!--INT_SCRIPT.') !== false) {
-            \preg_match_all('/<!--INT_SCRIPT\.[a-fA-F0-9]{32}-->/', $title, $matches, PREG_PATTERN_ORDER);
-            $this->_substituteIntInc = $matches[0];
+
+            // as of TYPO3 6.2 the page title generation is triggered again
+            // after INTincScript(), so we have to render _INT scripts here
+            // use $GLOBALS['TSFE']->content to determine wether this is neccessary
+            if (version_compare(TYPO3_version, '6.2', '>=') && !empty($GLOBALS['TSFE']->content)) {
+
+                do {
+                    \preg_match_all('/<!--(INT_SCRIPT\.[a-f0-9]{32})-->/', $title, $matches, PREG_SET_ORDER);
+                    $intScripts = array();
+                    foreach($matches as $match) {
+                        if (\is_array($GLOBALS['TSFE']->config['INTincScript'][$match[1]])) {
+                            $intScripts[$match[1]] = $GLOBALS['TSFE']->config['INTincScript'][$match[1]];
+                        }
+                    }
+
+                    $title = $this->_replaceIntScripts($title, $intScripts);
+                } while (\strpos($title, '<!--INT_SCRIPT.') !== false);
+
+            } else {
+                \preg_match_all('/<!--INT_SCRIPT\.[a-fA-F0-9]{32}-->/', $title, $matches, PREG_PATTERN_ORDER);
+                $this->_substituteIntInc = $matches[0];
+            }
         }
 
         // restore recordRegister
@@ -205,5 +226,59 @@ abstract class TitletagUtilityAbstract
         }
 
         return;
+    }
+
+    /**
+     * @param string $title
+     * @param array $intScripts
+     * @return string
+     * @see TyposcriptFrontendController::INTincScript_includeLibs()
+     * @see TyposcriptFrontendController::INTincScript_process()
+     */
+    protected function _replaceIntScripts($title, array $intScripts)
+    {
+        foreach($intScripts as $intScriptKey => $intConf) {
+            // includes
+            if (isset($intConf['includeLibs']) && $intConf['includeLibs']) {
+                $GLOBALS['TSFE']->includeLibraries($this->_trimExplode(',', $intConf['includeLibs'], true));
+            }
+
+            // get the cObj
+            $intCobj = unserialize($GLOBALS['TSFE']->config['INTincScript'][$intScriptKey]['cObj']);
+
+            // generate content
+            switch ($intConf['type']) {
+            	case 'COA' :
+            	    $substitute = $intCobj->COBJ_ARRAY($intConf['conf']);
+            	    break;
+            	case 'FUNC' :
+            	    $substitute = $intCobj->USER($intConf['conf']);
+            	    break;
+            	case 'POSTUSERFUNC' :
+            	    $substitute = $intCobj->callUserFunction($intConf['postUserFunc'], $intConf['conf'], $intConf['content']);
+            	    break;
+            }
+            $substitute = $GLOBALS['TSFE']->convOutputCharset($substitute);
+            $title = str_replace('<!--' . $intScriptKey . '-->', $substitute, $title);
+        }
+
+        return $title;
+    }
+
+    /**
+     * Proxy to GeneralUtility::trimExplode(), respecting TYPO3_version
+     *
+     * @param string $delim
+     * @param string $string
+     * @param boolaen $removeEmptyValues
+     * @param integer $limit
+     * @return array
+     */
+    protected function _trimExplode($delim, $string, $removeEmptyValues = FALSE, $limit = 0)
+    {
+        if (\version_compare(TYPO3_version, '6.0.0', '<')) {
+            return \t3lib_div::trimExplode($delim, $string, $removeEmptyValues, $limit);
+        }
+        return \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode($delim, $string, $removeEmptyValues, $limit);
     }
 }
