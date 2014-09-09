@@ -149,6 +149,9 @@ abstract class TitletagUtilityAbstract
     protected function _getDefaultTitle()
     {
         $siteTitle = trim($GLOBALS['TSFE']->tmpl->setup['sitetitle']) ? $GLOBALS['TSFE']->tmpl->setup['sitetitle'] : '';
+        if (isset($this->_conf['sitetitle_stdWrap.'])) {
+            $siteTitle = $GLOBALS['TSFE']->cObj->stdWrap($siteTitle, $this->_conf['sitetitle_stdWrap.']);
+        }
         $pageTitle = '';
         $separator = '';
 
@@ -159,6 +162,9 @@ abstract class TitletagUtilityAbstract
                 $pageTitle = $GLOBALS['TSFE']->altPageTitle
                     ? $GLOBALS['TSFE']->altPageTitle
                     : $GLOBALS['TSFE']->page['title'];
+                if (isset($this->_conf['pagetitle_stdWrap.'])) {
+                    $pageTitle = $GLOBALS['TSFE']->cObj->stdWrap($pageTitle, $this->_conf['pagetitle_stdWrap.']);
+                }
             }
         }
 

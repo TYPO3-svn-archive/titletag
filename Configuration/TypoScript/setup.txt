@@ -5,4 +5,6 @@ config.tx_titletag_enable = {$plugin.tx_titletag.enable}
 plugin.tx_titletag {
     overridePagetitle =
     forceTitle =
+    pagetitle_stdWrap =
+    sitetitle_stdWrap =
 }

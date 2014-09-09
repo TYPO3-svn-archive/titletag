@@ -153,6 +153,38 @@ Plugin setup
    Default
          -
 
+.. container:: table-row
+
+   Property
+         pagetitle_stdWrap
+   
+   Data type
+         stdWrap
+   
+   Description
+         stdWrap that is applied to the plain page title. This does not affect
+         the value of page.title nor any setting in config.pageTitleFirst,
+         overridePageTitle or forceTitle
+   
+   Default
+         -
+
+.. container:: table-row
+
+   Property
+         sitetitle_stdWrap
+   
+   Data type
+         stdWrap
+   
+   Description
+         stdWrap that is applied to the plain site title. This does not affect
+         the value of page.title nor any setting in config.pageTitleFirst,
+         overridePageTitle or forceTitle
+   
+   Default
+         -
+
 .. ###### END~OF~TABLE ######
 
 
@@ -160,10 +192,20 @@ Example
 """""""
 ::
 
+   # Force the string 'Welcome to my homepage!' on page #1
    plugin.tx_titletag.forceTitle.cObject = TEXT
    plugin.tx_titletag.forceTitle.cObject {
        value = Welcome to my homepage!
        if.value = 1
        if.equals.data = TSFE:id
    }
-
+   
+   # Append the string 'DETAILS AND SPECS' to the page title for direct subpages
+   # of page #2 (which might be a product overview e.g)
+   plugin.tx_titletag.pagetitle_stdWrap {
+       noTrimWrap = || DETAILS AND SPECS|
+       if {
+           value = 2
+           equals.data = page:pid
+       }
+   }
