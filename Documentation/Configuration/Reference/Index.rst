@@ -204,7 +204,7 @@ Example
    # of page #2 (which might be a product overview e.g)
    plugin.tx_titletag.pagetitle_stdWrap {
        noTrimWrap = || DETAILS AND SPECS|
-       if {
+       noTrimWrap.if {
            value = 2
            equals.data = page:pid
        }
